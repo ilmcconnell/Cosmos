@@ -3,9 +3,12 @@ Entry script for ingesting PDFs, creating the first object and passing it to the
 """
 
 # Logging config
-import logging
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
-logging.getLogger("pdfminer").setLevel(logging.WARNING)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+#logging = l.getLogger("pdfminer").setLevel(l.WARNING)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import click
 import tempfile
 import time
@@ -33,7 +36,7 @@ def ingest_pdf(pdf_path, pdf_dir, db_insert_fn, db_insert_pages_fn, subprocess_f
         pdf_obj = {}
         logs = []
         pdf_obj, err = load_pdf_metadata(pdf_path, pdf_obj)
-        if not err: 
+        if not err:
             logs.append(err)
         pdf_name = pdf_obj['pdf_name']
         pdf_path = os.path.abspath("%s/%s" % (pdf_dir, pdf_name))

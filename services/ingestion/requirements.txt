@@ -5,4 +5,5 @@ pdfminer.six
 chardet
 pillow
 joblib
+python-logstash
 
