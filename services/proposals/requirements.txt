@@ -3,3 +3,4 @@ numpy
 pillow
 joblib
 click
+python-logstash

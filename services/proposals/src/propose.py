@@ -5,8 +5,12 @@ Add proposals
 import pymongo
 from pymongo import MongoClient
 import os
-import logging
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+#logging = l.getLogger("pdfminer").setLevel(l.WARNING)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import time
 import io
 from connected_components import get_proposals
