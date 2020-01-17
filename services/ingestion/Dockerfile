@@ -1,13 +1,13 @@
-FROM python:3.7-alpine
+FROM iaross/cosmos_service_base
 
 # Install bash and vim
 #RUN apk add bash vim
 
 # Ghostscript
-RUN apk add ghostscript --no-cache
+#RUN apk add ghostscript --no-cache
 
 # Pillow requirements
-run apk add build-base jpeg-dev zlib-dev --no-cache
+#run apk add build-base jpeg-dev zlib-dev --no-cache
 
 COPY requirements.txt /
 

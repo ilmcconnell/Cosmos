@@ -1,0 +1,9 @@
+chardet
+click
+joblib
+numpy
+pandas
+pdfminer.six
+pillow
+pymongo
+python-logstash
