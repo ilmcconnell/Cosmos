@@ -10,4 +10,8 @@ services:
         #    - .:/develop/
         #command: tail -F anything
         
+networks:
+  default:
+    external:
+      name: cosmosnet
 

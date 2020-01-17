@@ -13,8 +13,7 @@ services:
             - 5003:5003
         volumes:
             - ./data:/app/data
-#networks:
-#  default:
-#    external:
-#      name: esnet
-#
+networks:
+  default:
+    external:
+      name: cosmosnet

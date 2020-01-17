@@ -12,3 +12,8 @@ services:
         #    - ${OUTPUT_DIR}:/output/
         environment:
             - DBCONNECT
+
+networks:
+  default:
+    external:
+      name: cosmosnet

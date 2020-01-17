@@ -23,8 +23,6 @@ services:
       # Use single node discovery in order to disable production mode and avoid bootstrap checks
       # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
-#    networks:
-#      - elk
 
   logstash:
     build:
@@ -45,8 +43,6 @@ services:
       - "9600:9600"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-#    networks:
-#      - elk
     depends_on:
       - elasticsearch
 
@@ -62,15 +58,13 @@ services:
         read_only: true
     ports:
       - "5601:5601"
-#    networks:
-#      - elk
     depends_on:
       - elasticsearch
 
 networks:
   default:
     external: 
-      name: elasticsearch_esnet
+      name: cosmosnet
 
 volumes:
   elasticsearch:

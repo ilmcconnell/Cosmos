@@ -18,8 +18,6 @@ services:
       - esdata01:/ssd/ankur/elasticsearch/data
     ports:
       - 9200:9200
-    networks:
-      - esnet
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 10s
@@ -43,8 +41,6 @@ services:
         hard: -1
     volumes:
       - esdata02:/ssd/ankur/elasticsearch/data
-    networks:
-      - esnet
 
 volumes:
   esdata01:
@@ -53,4 +49,6 @@ volumes:
     driver: local
 
 networks:
-  esnet:
+  default:
+    external:
+      name: cosmosnet

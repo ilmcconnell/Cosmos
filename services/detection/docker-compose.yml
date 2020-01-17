@@ -17,3 +17,8 @@ services:
         environment:
             - DBCONNECT
             - DEVICE
+
+networks:
+  default:
+    external:
+      name: cosmosnet
