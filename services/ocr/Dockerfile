@@ -1,20 +1,21 @@
-FROM python:3.7-stretch
+FROM iaross/cosmos_service_base
 
 # Install bash and vim
 #RUN apk add bash vim
 
 # Pillow requirements
 #run apt install build-base jpeg-dev zlib-dev
-RUN apt-get update
-RUN apt-get install -y software-properties-common
-RUN apt-get install -y apt-transport-https
-RUN echo 'deb https://notesalexp.org/tesseract-ocr/stretch/ stretch main' >> /etc/apt/sources.list
-RUN apt-get update -oAcquire::AllowInsecureRepositories=true
-RUN apt-get install -y --allow-unauthenticated notesalexp-keyring -oAcquire::AllowInsecureRepositories=true
+#RUN apt-get update
+#RUN apt-get install -y software-properties-common
+#RUN apt-get install -y apt-transport-https
+#RUN echo 'deb https://notesalexp.org/tesseract-ocr/stretch/ stretch main' >> /etc/apt/sources.list
+#RUN apt-get update -oAcquire::AllowInsecureRepositories=true
+#RUN apt-get install -y --allow-unauthenticated notesalexp-keyring -oAcquire::AllowInsecureRepositories=true
 
-RUN apt-get update
+#RUN apt-get update
 
-RUN apt-get install -y --allow-unauthenticated tesseract-ocr
+#RUN apt-get install -y --allow-unauthenticated tesseract-ocr
+RUN apk add tesseract-ocr
 
 COPY requirements.txt /
 
