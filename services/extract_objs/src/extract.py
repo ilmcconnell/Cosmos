@@ -6,8 +6,11 @@ import json
 import pymongo
 from pymongo import MongoClient
 import os
-import logging
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import time
 import io
 from PIL import Image
@@ -22,7 +25,7 @@ def load_pages(db, buffer_size):
     """
     """
     current_docs = []
-    
+
     for doc in db.propose_pages.find({'postprocess': True, 'extract': False}, no_cursor_timeout=True):
         current_docs.append(doc)
         if len(current_docs) == buffer_size:
@@ -65,12 +68,12 @@ def extract_objs(page):
                           (tess_df['left'] >= tl_x) & (tess_df['right'] <= br_x)]
         feathered_bb = [max(bb[0]-2, 0), max(bb[1]-2, 0),
                         min(bb[2]+2, 1920), min(bb[3]+2, 1920)]
-        
+
         cropped_img = img.crop(feathered_bb)
         bytes_stream = io.BytesIO()
         cropped_img.save(bytes_stream, format='PNG')
         bstring = bytes_stream.getvalue()
-        
+
         words = obj_ocr['text']
         word_list = []
         for ind, word in words.iteritems():

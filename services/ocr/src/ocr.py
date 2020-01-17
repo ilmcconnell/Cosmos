@@ -6,8 +6,11 @@ import json
 import pymongo
 from pymongo import MongoClient
 import os
-import logging
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import time
 import io
 from PIL import Image

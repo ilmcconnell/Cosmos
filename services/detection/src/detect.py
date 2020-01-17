@@ -5,9 +5,12 @@ Detect objects over pages
 import pymongo
 from pymongo import MongoClient
 import os
-import logging
 import datetime
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import time
 import io
 from preprocess import pad_image
@@ -60,7 +63,7 @@ def pages_detection_scan(config_pth, weights_pth, num_processes, db_insert_fn, s
             page_id = str(page['_id'])
             page['detected_objs'] = detected_objs[page_id]
             del page['padded_bytes']
-            
+
         db_insert_fn(pages, client)
 
     end_time = time.time()

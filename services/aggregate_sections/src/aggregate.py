@@ -2,10 +2,13 @@
 Aggregate text blobs into coherent sections
 """
 
-import logging
 import time
 import os
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 import pymongo
 from pymongo import MongoClient
 from collections import defaultdict

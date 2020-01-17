@@ -73,7 +73,8 @@ RUN pip install numpy==1.15.4 \
         imgaug \
         Pillow==6.1 \
         redis \
-        sqlalchemy
+        sqlalchemy \
+        python-logstash
 
 RUN pip install joblib dataclasses
 

@@ -12,3 +12,4 @@ matplotlib
 pandas
 sklearn
 bs4
+python-logstash

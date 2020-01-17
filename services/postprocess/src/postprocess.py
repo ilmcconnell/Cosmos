@@ -4,8 +4,11 @@ Post processing on detected objects
 import pymongo
 from pymongo import MongoClient
 import time
-import logging
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.DEBUG)
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 from joblib import Parallel, delayed
 import click
 from xgboost_model.inference import run_inference, PostprocessException
