@@ -37,7 +37,9 @@ def postprocess(db_insert_fn, num_processes, weights_pth, skip):
     client = MongoClient(os.environ["DBCONNECT"])
     logging.info(f'Connected to client: {client}.')
     db = client.pdfs
+    n = 0
     for batch in load_detected_pages(db, 100):
+        n+=len(batch)
         logging.info('Loaded next batch. Running postprocessing')
         try:
             pages = Parallel(n_jobs=num_processes)(delayed(run_inference)(page, weights_pth) for page in batch)
@@ -48,7 +50,7 @@ def postprocess(db_insert_fn, num_processes, weights_pth, skip):
 
         db_insert_fn(pages, client)
     end_time = time.time()
-    logging.info(f'Exiting post-processing. Time up: {end_time - start_time}')
+    logging.info(f'End post-processing. Total time: {end_time - start_time} s ({n} pages, {num_processes} threads)')
 
 def mongo_insert_fn(objs, client):
     db = client.pdfs

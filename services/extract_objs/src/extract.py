@@ -103,7 +103,9 @@ def extract_scan(db_insert_fn, num_processes):
     client = MongoClient(os.environ['DBCONNECT'])
     logging.info(f'Connected to client: {client}')
     db = client.pdfs
+    n = 0
     for batch in load_pages(db, num_processes):
+        n+=len(batch)
         #print(batch[0]['detected_objs'])
         #pages = [process_page(page, db) for page in batch]
         pages = Parallel(n_jobs=num_processes)(delayed(extract_objs)(page) for page in batch)
@@ -120,7 +122,7 @@ def extract_scan(db_insert_fn, num_processes):
             continue
         db_insert_fn(objs, batch, client)
     end_time = time.time()
-    logging.info(f'Exiting object extraction. Total time: {end_time - start_time}')
+    logging.info(f'End extraction. Total time: {end_time - start_time} s ({n} pages, {num_processes} threads)')
 
 
 def mongo_insert_fn(objs, pages, client):

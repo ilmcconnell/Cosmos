@@ -9,15 +9,8 @@ services:
         #volumes:
         #    - .:/develop/
         #command: tail -F anything
-        networks:
-          - cosmosnet
 
-networks:
-  cosmosnet:
-      name: cosmosnet
-        
 networks:
   default:
     external:
       name: cosmosnet
-

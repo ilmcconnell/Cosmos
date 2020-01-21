@@ -56,7 +56,9 @@ def pages_detection_scan(config_pth, weights_pth, num_processes, db_insert_fn, s
     db = client.pdfs
     device_str = os.environ["DEVICE"]
     model = get_model(config_pth, weights_pth, device_str)
+    n = 0
     for batch in load_pages(db, 30):
+        n+=len(batch)
         pages = Parallel(n_jobs=num_processes)(delayed(preprocess_page)(page) for page in batch)
         detected_objs = run_inference(model, pages, config_pth, device_str)
         for page in pages:
@@ -67,7 +69,7 @@ def pages_detection_scan(config_pth, weights_pth, num_processes, db_insert_fn, s
         db_insert_fn(pages, client)
 
     end_time = time.time()
-    logging.info(f'Exiting detection. Time up: {end_time - start_time}')
+    logging.info(f'End detection. Total time: {end_time - start_time} s ({n} pages, {num_processes} threads)')
 
 def mongo_insert_fn(objs, client):
     db = client.pdfs

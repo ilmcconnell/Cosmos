@@ -90,7 +90,9 @@ def ocr_scan(db_insert_fn, num_processes, skip):
     client = MongoClient(os.environ['DBCONNECT'])
     logging.info(f'Connected to client: {client}')
     db = client.pdfs
+    n = 0
     for batch in load_pages(db, num_processes):
+        n += len(batch)
         #pages = [process_page(page, db) for page in batch]
         pages = Parallel(n_jobs=num_processes)(delayed(process_page)(page) for page in batch)
         try:
@@ -107,7 +109,7 @@ def ocr_scan(db_insert_fn, num_processes, skip):
         #objs = [o for p in pages for o in p]
         db_insert_fn(pages, client)
     end_time = time.time()
-    logging.info(f'Finished OCR stage. Total time: {end_time - start_time}')
+    logging.info(f'End OCR. Total time: {end_time - start_time} s ({n} pages, {num_processes} threads)')
 
 
 def mongo_insert_fn(objs, client):

@@ -293,7 +293,9 @@ def section_scan(db_section_insert_fn, db_equation_insert_fn, db_figure_insert_f
     client = MongoClient(os.environ['DBCONNECT'])
     logging.info(f'Connected to client: {client}')
     db = client.pdfs
+    n=0
     for batch in load_pages(db, num_processes):
+        n+=len(batch)
         logging.info('Batch constructed. Running aggregation')
         if sections:
             objs = Parallel(n_jobs=num_processes)(delayed(aggregate_sections)(o) for o in batch)
@@ -322,7 +324,7 @@ def section_scan(db_section_insert_fn, db_equation_insert_fn, db_figure_insert_f
                 continue
             db_table_insert_fn(objs, client)
     end_time = time.time()
-    logging.info(f'Exiting section aggregation. Time up: {end_time - start_time}')
+    logging.info(f'End aggregation. Total time: {end_time - start_time} s ({n} docs, {num_processes} threads)')
 
 def section_insert_fn(objs, client):
     db = client.pdfs

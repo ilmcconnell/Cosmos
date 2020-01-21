@@ -12,4 +12,4 @@ services:
 networks:
   default:
     external:
-      name: cosmosnet
+      name: cosmosnet_temp

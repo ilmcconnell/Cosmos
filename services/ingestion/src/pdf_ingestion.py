@@ -79,14 +79,14 @@ def run_pdf_ingestion(pdf_dir, db_insert_fn, db_insert_pages_fn, subprocess_fn, 
     start_time = time.time()
 
     pdf_paths = glob.glob(os.path.join(pdf_dir, '*.pdf'))
-    logging.info(f'Ingesting {len(pdf_paths)} pdfs')
+    logging.info(f'Ingesting {len(pdf_paths)} pdfs using {n_jobs} threads')
     logs = Parallel(n_jobs=n_jobs)(delayed(ingest_pdf)(pdf_path, pdf_dir, db_insert_fn, db_insert_pages_fn, subprocess_fn, skip) for pdf_path in pdf_paths)
     for log_list in logs:
         for log in log_list:
             logging.info(log)
 
     end_time = time.time()
-    logging.info(f'End running metadata ingestion. Total time: {end_time - start_time} s')
+    logging.info(f'End running metadata ingestion. Total time: {end_time - start_time} s ({len(pdf_paths)} docs, {n_jobs} threads)')
     return
 
 

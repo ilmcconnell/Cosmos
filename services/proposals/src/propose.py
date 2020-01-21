@@ -70,13 +70,16 @@ def propose_doc(db_insert_fn, num_processes, clean, multimachine=False, replica_
             return
         logging.info('Document found and added to queue')
     db = client.pdfs
+    n = 0
     for batch in load_docs(db, 100):
         logging.info('Loaded next batch. Running proposals')
+        n+=len(batch)
         pages = Parallel(n_jobs=num_processes)(delayed(run_page)(page, db_insert_fn) for page in batch)
         db_insert_fn(pages, client, clean)
 
     end_time = time.time()
-    logging.info(f'Exiting proposal generation. Time up: {end_time - start_time}')
+    logging.info(f'End proposal generation. Total time: {end_time - start_time} s ({n} pages, {num_processes} threads)')
+#    logging.info(f'Exiting proposal generation. Time up: {end_time - start_time}')
 
 
 """
@@ -108,7 +111,7 @@ def propose(db_insert_fn):
         logging.error(err)
 
     end_time = time.time()
-    logging.info(f'Exiting proposal generation. Time up: {end_time - start_time}')
+    logging.info(f'Exiting proposal generation. Total time: {end_time - start_time}')
 
 def mongo_insert_fn(objs, client, clean):
     if len(objs) == 0:
