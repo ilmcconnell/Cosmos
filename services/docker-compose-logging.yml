@@ -64,7 +64,7 @@ services:
 networks:
   default:
     external: 
-      name: cosmosnet_temp
+      name: cosmosnet
 
 #volumes:
 #  elasticsearch:
