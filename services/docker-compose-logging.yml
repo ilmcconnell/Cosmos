@@ -11,12 +11,12 @@ services:
         source: ./logging/elasticsearch/config/elasticsearch.yml
         target: /usr/share/elasticsearch/config/elasticsearch.yml
         read_only: true
-      - type: volume
-        source: elasticsearch
+      - type: bind
+        source: /hdd/iaross/cosmos_logging
         target: /usr/share/elasticsearch/data
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "9201:9201"
+      - "9301:9301"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
       ELASTIC_PASSWORD: changeme
@@ -64,8 +64,8 @@ services:
 networks:
   default:
     external: 
-      name: cosmosnet
+      name: cosmosnet_temp
 
-volumes:
-  elasticsearch:
-
+#volumes:
+#  elasticsearch:
+#
