@@ -12,4 +12,6 @@ services:
 networks:
   default:
     external:
-      name: cosmosnet
+        networks:
+          - cosmosnet
+

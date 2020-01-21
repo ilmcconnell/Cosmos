@@ -47,6 +47,8 @@ def ingest_pdf(pdf_path, pdf_dir, db_insert_fn, db_insert_pages_fn, subprocess_f
         subprocess_fn(pdf_path, img_tmp)
         pages = []
         pages = load_page_data(img_tmp, pdf_obj)
+        if pages == []:
+            return [f"{pdf_path} made a impossibly large image -- skipping."]
         try:
             pdf_logs = db_insert_fn(pdf_obj)
             pages_logs = db_insert_pages_fn(pages)
@@ -150,7 +152,11 @@ def load_page_data(img_dir, current_obj):
         logging.info(f)
         page_obj = {}
         page_num = int(os.path.basename(f))
-        img = Image.open(f)
+        try:
+            img = Image.open(f)
+        except Image.DecompressionBombError:
+            logging.warning(f"Couldn't open image {f} - image too large.")
+            return []
         width, height = img.size
         with open(f, 'rb') as bimage:
             bstring = bimage.read()
