@@ -142,29 +142,6 @@ def insert_pdf_mongo(pdf):
             raise e
     return f"Inserted pdf : {result}"
 
-
-# taken from https://stackoverflow.com/questions/20068945/detect-if-image-is-color-grayscale-or-black-and-white-with-python-pil
-def is_color(pil_img, thumb_size=40, MSE_cutoff=22, adjust_color_bias=True):
-    bands = pil_img.getbands()
-    if bands == ('R','G','B') or bands== ('R','G','B','A'):
-        thumb = pil_img.resize((thumb_size,thumb_size))
-        SSE, bias = 0, [0,0,0]
-        if adjust_color_bias:
-            bias = ImageStat.Stat(thumb).mean[:3]
-            bias = [b - sum(bias)/3 for b in bias ]
-        for pixel in thumb.getdata():
-            mu = sum(pixel)/3
-            SSE += sum((pixel[i] - mu - bias[i])*(pixel[i] - mu - bias[i]) for i in [0,1,2])
-        MSE = float(SSE)/(thumb_size*thumb_size)
-        if MSE <= MSE_cutoff:
-            return False
-        else:
-            return True
-    elif len(bands)==1:
-        return False
-    else: # weird band signature
-        return True
-
 def load_page_data(img_dir, current_obj):
     """
     Iterate through the img directory, and retrieve the page level data
@@ -185,9 +162,6 @@ def load_page_data(img_dir, current_obj):
             page_obj['bytes'] = bstring
             bytesio = io.BytesIO(bstring)
             img = resize_png(bytesio)
-            # shave some space by detect if image is B+W and get rid of some channels if so.
-            if not is_color(img):
-                img = img.convert('L')
             # Convert it back to bytes
             resize_bytes_stream = io.BytesIO()
             img.save(resize_bytes_stream, format='PNG')
