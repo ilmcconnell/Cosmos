@@ -9,7 +9,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from flask import Flask, request, abort
 from flask.json import JSONEncoder
-import os
+import os, sys
 from tabulate import tabulate
 from ast import literal_eval as make_tuple
 from io import BytesIO
@@ -72,7 +72,7 @@ def postprocess_result(result):
 @app.route('/search/preview')
 def download():
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     try:
         _id = request.args.get('id', '')
         obj_id = ObjectId(_id)
@@ -88,7 +88,7 @@ def download():
 @app.route('/search/get_dataframe')
 def get_dataframe():
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     try:
         _id = request.args.get('id', '')
         obj_id = ObjectId(_id)
@@ -104,7 +104,7 @@ def get_dataframe():
 @app.route('/search')
 def search():
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     try:
         _id = request.args.get('id', '')
         obj_type = request.args.get('type', '')
@@ -202,7 +202,7 @@ def search():
 @app.route('/values')
 def values():
     client = MongoClient(os.environ['DBCONNECT'])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     try:
         query = request.args.get('q', '')
         print(values_query)
@@ -224,7 +224,7 @@ qa_URL = 'http://qa:4000/query'
 @app.route('/qa')
 def qa():
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     try:
         query = request.args.get('q', '')
         s = Search().query('match', content=query).query('match', cls='Section')[:25]
@@ -274,7 +274,7 @@ def pages():
     '''
     '''
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     page_num = int(request.args.get('pageNumber', 0))
 #    curs = db.propose_pages.find().sort('_id').skip(PAGE_SIZE * page_num).limit(PAGE_SIZE)
     curs = db.propose_pages.aggregate([
@@ -309,7 +309,7 @@ def object_lookup():
 
     '''
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     pdf_name = request.args.get("pdf_name")
     page_num = int(request.args.get('page_num'))
     x, y = make_tuple(request.args.get("coords"))
@@ -326,10 +326,7 @@ def object_lookup():
 
 def find_object(pdf_name, page_num, x, y):
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
-    pdf_name = request.args.get("pdf_name")
-    page_num = int(request.args.get('page_num'))
-    x, y = make_tuple(request.args.get("coords"))
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     result = db.objects.find_one({
         "pdf_name" : pdf_name,
         "page_num" : page_num,
@@ -354,8 +351,28 @@ def page(xdd_docid, page_num):
     '''
     '''
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     curs = db.propose_pages.find({"pdf_name": f"{xdd_docid}.pdf", "page_num": int(page_num)})
+    result_list = []
+    for result in curs:
+        result['_id'] = str(result['_id'])
+        result['pdf_id'] = str(result['pdf_id'])
+        del result['bytes']
+        encoded = base64.encodebytes(result['resize_bytes'])
+        result['resize_bytes'] = encoded.decode('ascii')
+        del result['ocr_df']
+        result_list.append(result)
+    results_obj = {'results': result_list}
+    return jsonify(results_obj)
+
+@app.route('/search/image/<page_id>')
+@app.route('/search/page/<page_id>')
+def page_by_id(page_id):
+    '''
+    '''
+    client = MongoClient(os.environ["DBCONNECT"])
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
+    curs = db.propose_pages.find({"_id": ObjectId(page_id) })
     result_list = []
     for result in curs:
         result['_id'] = str(result['_id'])
@@ -373,12 +390,21 @@ def objects(xdd_docid, page_num):
     '''
     '''
     client = MongoClient(os.environ["DBCONNECT"])
-    db = client.pdfs
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
     curs = db.objects.find({"pdf_name": f"{xdd_docid}.pdf", "page_num": int(page_num)})
     result_list = []
     for result in curs:
         result_list.append(postprocess_result(result))
     results_obj = {'results': result_list}
+    return jsonify(results_obj)
+
+@app.route('/search/objects/<object_id>')
+def object_by_id(object_id):
+    '''
+    '''
+    client = MongoClient(os.environ["DBCONNECT"])
+    db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
+    results_obj = db.objects.find_one({"_id": ObjectId(object_id)})
     return jsonify(results_obj)
 
 
@@ -393,16 +419,24 @@ def object_annotate():
         return jsonify(ANNOTATIONS_ALLOWED)
 
     if request.method == "POST":
+        print("POSTing some data baby")
         client = MongoClient(os.environ["DBCONNECT"])
-        db = client.pdfs
+        db = client[os.environ["PDF_DB"]] if "PDF_DB" in os.environ else client.pdfs
 
-        object_id = request.args.get("object_id", None)
-        pdf_name = request.args.get("pdf_name", None)
-        page_num = int(request.args.get('page_num', -1))
+        data = request.get_json(force=True)
+        print(f"Data!: {data}")
+        object_id = data.get("object_id", None)
+        pdf_name = data.get("pdf_name", None)
+        page_num = int(data.get('page_num', -1))
+        print(pdf_name)
         try:
-            x, y = make_tuple(request.args.get("coords"))
-        except:
-            x, y = None
+            print(data.get("coords"))
+            x, y = make_tuple(data.get("coords"))
+        except Exception as err:
+            print(err)
+            print(sys.exc_info())
+            x = None
+            y = None
 
         if object_id is None and (x is None or y is None or pdf_name is None or page_num==-1):
             abort(400)
@@ -411,22 +445,22 @@ def object_annotate():
         object_id = find_object(pdf_name, page_num, x, y)["_id"]
 
         success = False
-        print(type(request.args))
-        for k, v in request.args.items():
+        print(type(data))
+        for k, v in data.items():
             if k not in ANNOTATIONS_ALLOWED.keys(): continue
 
             atype = ANNOTATIONS_ALLOWED[k]
-            if atype == "text" :
-                pass
-            elif atype == "boolean":
-                if v.lower() == "true" :
-                    v = True
-                elif v.lower() == "false" :
-                    v = False
+#            if atype == "text" :
+#                pass
+#            elif atype == "boolean":
+#                if v.lower() == "true" :
+#                    v = True
+#                elif v.lower() == "false" :
+#                    v = False
 
             res = db.objects.update_one({"_id": ObjectId(object_id)},
                     {"$set" : {k: v}})
             success = success or (res.modified_count >= 1)
 
-        return json.dumps({'success':success}), 200, {'ContentType':'application/json'}
+        return json.dumps({'success':success, "objectid" : str(object_id)}), 200, {'ContentType':'application/json'}
 
