@@ -54,7 +54,5 @@ RUN pip install elasticsearch_dsl
 RUN pip install spacy
 RUN python3 -m spacy download en_core_web_lg
 
-RUN pip install flask-cors
-
 COPY src/ /app
 WORKDIR /app
