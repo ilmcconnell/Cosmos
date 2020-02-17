@@ -3,8 +3,8 @@ services:
     merge:
         build: .
         ipc: host
-#        command: "python3 merge.py 60"
-        command: "tail -f /dev/null"
+        command: "python3 merge.py 60"
+#        command: "tail -f /dev/null"
         environment:
           - DBCONNECT
 

@@ -26,8 +26,7 @@ def load_pages(db, buffer_size):
     """
     """
     current_docs = []
-#    for doc in db.propose_pages.find({'postprocess': True, "$or" : [{'merged': False}, {"merged" : {"$exists" : False}}]}, no_cursor_timeout=True):
-    for doc in db.propose_pages.find({'_id': ObjectId("5e2f6ebbd523ce570a4bb4da")}, no_cursor_timeout=True):
+    for doc in db.propose_pages.find({'postprocess': True, "$or" : [{'merged': False}, {"merged" : {"$exists" : False}}]}, no_cursor_timeout=True):
         current_docs.append(doc)
         if len(current_docs) == buffer_size:
             yield current_docs
@@ -37,9 +36,11 @@ def load_pages(db, buffer_size):
 
 def merge_objs(page):
     if 'pp_detected_objs' not in page:
-        return (None, f'This page has not had postprocessing done on it')
+        logging.warning(f'This page has not had postprocessing done on it')
+        return None
     if page['pp_detected_objs'] is None or len(page['pp_detected_objs']) == 0:
-        return (None, f'No detected objs on page: {page["_id"]}')
+        logging.warning(f'No detected objs on page: {page["_id"]}')
+        return None
     detected_objs = page['pp_detected_objs']
     # Sanity check that filters objects not of length 3
     detected_objs = [obj for obj in detected_objs if len(obj) == 3]
@@ -67,6 +68,8 @@ def merge_scan(db_insert_fn, num_processes):
 def mongo_insert_fn(pages, client):
     db = client.pdfs
     for page in pages:
+        if page is None:
+            continue
         try:
             result = db.propose_pages.update_one({'_id': page['_id']},
                                              {'$set':
@@ -77,7 +80,7 @@ def mongo_insert_fn(pages, client):
                                              }, upsert=False)
             logging.info(f'Updated result: {result}')
         except Exception as e:
-            logging.error(f'Document write error: {e}\n Document id: {str(obj["_id"])}')
+            logging.error(f'Document write error: {e}\n Document id: {str(page["_id"])}')
 
 
 
