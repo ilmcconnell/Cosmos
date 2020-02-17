@@ -1,0 +1,5 @@
+click
+pymongo
+joblib
+python-logstash
+requests
