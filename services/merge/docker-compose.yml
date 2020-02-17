@@ -1,0 +1,14 @@
+version: "2.3"
+services:
+    merge:
+        build: .
+        ipc: host
+#        command: "python3 merge.py 60"
+        command: "tail -f /dev/null"
+        environment:
+          - DBCONNECT
+
+networks:
+  default:
+    external:
+      name: cosmosnet_toc
