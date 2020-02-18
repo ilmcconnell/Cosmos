@@ -1,6 +1,11 @@
 """
 Group classes
 """
+import logging as l
+import logstash
+l.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=l.DEBUG)
+logging = l.getLogger()
+logging.addHandler(logstash.TCPLogstashHandler('services_logstash_1', 5000))
 
 def calculate_iou(box1, box2, contains=False):
     # Shamelessly adapted from
@@ -87,11 +92,14 @@ def group_cls(obj_list, g_cls, do_table_merge=False, merge_over_classes=None):
     if do_table_merge:
         while True:
             new_nbhds = []
+            new_nbhds_coords = []
             merged_nbhds = []
             # Now we check for intersecting table neighborhoods
+            n = 0
             for nbhd in nbhds:
+                n+=1
                 nbhd, scr = nbhd
-                for nbhd2 in nbhds:
+                for nbhd2 in nbhds: # on a page with thousands of neighborhoods, this hurts a lot.
                     nbhd2, scr2 = nbhd2
                     if nbhd2 == nbhd:
                         continue
@@ -99,11 +107,12 @@ def group_cls(obj_list, g_cls, do_table_merge=False, merge_over_classes=None):
                     if iou > 0:
                         # merge the neighborhoods
                         new_box = [min(nbhd[0], nbhd2[0]), min(nbhd[1], nbhd2[1]), max(nbhd[2], nbhd2[2]), max(nbhd[3], nbhd2[3])]
-                        if new_box in new_nbhds:
+                        if new_box in new_nbhds_coords:
                             continue
                         merged_nbhds.append(nbhd)
                         merged_nbhds.append(nbhd2)
                         new_nbhds.append((new_box, scr if scr >= scr2 else scr2))
+                        new_nbhds_coords.append(new_box)
             for nbhd in nbhds:
                 nbhd, scr = nbhd
                 if nbhd not in merged_nbhds:
