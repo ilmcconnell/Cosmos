@@ -22,8 +22,8 @@ def load_pages(db, buffer_size):
     """
     """
     current_docs = []
-    
-    for doc in db.propose_pages.find({'postprocess': True, 'extract': False}, no_cursor_timeout=True):
+
+    for doc in db.propose_pages.find({'merge': True, 'extract': False}, no_cursor_timeout=True):
         current_docs.append(doc)
         if len(current_docs) == buffer_size:
             yield current_docs
@@ -33,11 +33,11 @@ def load_pages(db, buffer_size):
 
 
 def extract_objs(page):
-    if 'pp_detected_objs' not in page:
+    if 'merge_objs' not in page:
         return (None, f'This page has not had postprocessing done on it')
-    if page['pp_detected_objs'] is None or len(page['pp_detected_objs']) == 0:
+    if page['merge_objs'] is None or len(page['merge_objs']) == 0:
         return (None, f'No detected objs on page: {page["_id"]}')
-    detected_objs = page['pp_detected_objs']
+    detected_objs = page['merge_objs']
     # Sanity check that filters objects not of length 3
     detected_objs = [obj for obj in detected_objs if len(obj) == 3]
     #l = group_cls(detected_objs, 'Table', do_table_merge=True, merge_over_classes=['Figure', 'Section Header', 'Page Footer', 'Page Header'])
@@ -65,12 +65,12 @@ def extract_objs(page):
                           (tess_df['left'] >= tl_x) & (tess_df['right'] <= br_x)]
         feathered_bb = [max(bb[0]-2, 0), max(bb[1]-2, 0),
                         min(bb[2]+2, 1920), min(bb[3]+2, 1920)]
-        
+
         cropped_img = img.crop(feathered_bb)
         bytes_stream = io.BytesIO()
         cropped_img.save(bytes_stream, format='PNG')
         bstring = bytes_stream.getvalue()
-        
+
         words = obj_ocr['text']
         word_list = []
         for ind, word in words.iteritems():
