@@ -33,11 +33,11 @@ def load_pages(db, buffer_size):
 
 
 def extract_objs(page):
-    if 'merge_objs' not in page:
-        return (None, f'This page has not had postprocessing done on it')
-    if page['merge_objs'] is None or len(page['merge_objs']) == 0:
+    if 'merged_objs' not in page:
+        return (None, f'This page has not had merging done on it')
+    if page['merged_objs'] is None or len(page['merged_objs']) == 0:
         return (None, f'No detected objs on page: {page["_id"]}')
-    detected_objs = page['merge_objs']
+    detected_objs = page['merged_objs']
     # Sanity check that filters objects not of length 3
     detected_objs = [obj for obj in detected_objs if len(obj) == 3]
     #l = group_cls(detected_objs, 'Table', do_table_merge=True, merge_over_classes=['Figure', 'Section Header', 'Page Footer', 'Page Header'])
