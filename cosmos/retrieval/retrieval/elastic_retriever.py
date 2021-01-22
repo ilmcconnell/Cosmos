@@ -9,10 +9,19 @@ import pandas as pd
 import hashlib
 import logging
 
-logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.WARNING)
+logging.basicConfig(format='%(levelname)s :: %(asctime)s :: %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+def upsert(doc):
+    d = doc.to_dict(True)
+    d['_op_type'] = 'update'
+    d['doc'] = d['_source']
+    d['_index'] = doc.Index().name
+    d['doc_as_upsert'] = True
+    d['_id'] = str(doc.get_id())
+    del d['_source']
+    return d
 
 class EntityObjectIndex(Document):
     """
@@ -116,6 +125,7 @@ class Object(EntityObjectIndex):
     def get_id(self):
         '''
         Elasticsearch ingest process would be greatly improved by having a unique ID per object.
+
         '''
         return hashlib.sha1(f"{self.cls}{self.detect_score}{self.postprocess_score}{self.dataset_id}{self.header_content}{self.content}{self.pdf_name}".encode('utf-8')).hexdigest()
 
@@ -141,6 +151,8 @@ class FullDocument(Document):
     dataset_id = Text(fields={'raw': Keyword()})
     content = Text()
     name = Text(fields={'raw': Keyword()})
+    def get_id(self):
+        return self.name.replace(".pdf", "")
 
     class Index:
         name = 'fulldocument'
@@ -291,6 +303,7 @@ class ElasticRetriever(Retriever):
         index_template = EntityObjectIndex._index.as_template("base")
         index_template.save()
         FullDocument.init()
+
         # This is a parquet file to load from
         if document_parquet != '':
             to_add = []
@@ -499,6 +512,19 @@ class ElasticRetriever(Retriever):
             logger.info('Done building equations index')
         logger.info('Done building object index')
 
+    def count(self, index):
+        if self.awsauth is not None:
+            connections.create_connection(hosts=self.hosts,
+                                          http_auth=self.awsauth,
+                                          use_ssl=True,
+                                          verify_certs=True,
+                                          connection_class=RequestsHttpConnection
+                                          )
+        else:
+            connections.create_connection(hosts=self.hosts)
+        s = Search(index=index)
+        return s.count()
+
     def delete(self, dataset_id):
         if self.awsauth is not None:
             connections.create_connection(hosts=self.hosts,
@@ -522,3 +548,4 @@ class ElasticRetriever(Retriever):
 
     def rerank(self, query, contexts):
         raise NotImplementedError('ElasticRetriever does not rerank results')
+
