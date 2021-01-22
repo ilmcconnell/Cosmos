@@ -1,0 +1,52 @@
+FROM ubuntu:20.04
+
+# Dockerfile information
+LABEL version="0.1"
+LABEL description="Dockerfile to run postprocess training - update model weights"
+
+# setup environment variables and arguments
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+	
+# no need for front end?
+# ARG DEBIAN_FRONTEND=noninteractive
+
+# install necessary software
+RUN apt update
+RUN apt install -y ghostscript gcc libmysqlclient-dev wget software-properties-common apt-transport-https
+
+# remove packages cache to save space
+RUN rm -rf /var/lib/apt/lists/*
+
+# download, run, and remove Miniconda file
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda-latest-Linux-x86_64.sh
+
+RUN conda update conda
+RUN conda install python=3.8
+# RUN conda install dask
+
+# RUN conda install -c conda-forge uwsgi
+COPY ingestion/requirements.txt /
+RUN pip install -r /requirements.txt
+
+# install utf-8 - needed?
+RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
+    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+ENV LANG en_US.utf8
+
+ADD /ssd/iain/Cosmos/
+
+RUN  
+
+FROM python:3
+
+ADD train_postprocess.py /
+RUN pip install requirements
+
+CMD [ "python", "./train_postprocess.py" ]
+
+
